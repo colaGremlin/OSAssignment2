@@ -1,0 +1,25 @@
+1. Which function called syscall?
+   usertrap() in kernel/trap.c (backtrace: syscall <- usertrap <- uservec in
+   the trampoline page at 0x3ffffff09c).
+
+2. What is the value of p->trapframe->a7 and what does it represent?
+   0xf (15) = SYS_open. a7 holds the system call number; the first system
+   call made by user/init.c is open("console", O_RDWR).
+
+3. What was the previous mode that the CPU was in?
+   sstatus = 0x200000022. The SPP bit (bit 8) is 0, so the CPU was in user
+   mode before the trap into the kernel.
+
+4. Assembly instruction the kernel panics at, and register for num?
+   scause=0xd sepc=0x80001d74 stval=0x0
+   80001d74:  00002683   lw  a3,0(zero)
+   The variable num is held in register a3.
+
+5. Why does the kernel crash?
+   It loads from virtual address 0, which is not mapped in the kernel page
+   table (the kernel address space starts at KERNBASE 0x80000000, with only
+   devices mapped below it, none at 0). scause 0xd is a load page fault, and
+   stval = 0x0 confirms the faulting address is 0.
+
+6. Name and pid of the process running when the kernel panicked?
+   p->name = "init", p->pid = 1.

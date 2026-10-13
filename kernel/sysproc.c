@@ -98,6 +98,31 @@ sys_kill(void)
   return kkill(pid);
 }
 
+// interpose(mask, path): reject the syscalls in mask, except open/exec of
+// path ("-" means no path is allowed). Restrictions can only be tightened.
+uint64
+sys_interpose(void)
+{
+  struct proc *p = myproc();
+  char path[MAXPATH];
+  int mask;
+
+  argint(0, &mask);
+  if (argstr(1, path, sizeof(path)) < 0)
+    return -1;
+  if (strncmp(path, "-", sizeof(path)) == 0)
+    path[0] = '\0';
+
+  if (p->sandboxed && strncmp(p->sandbox_path, path, MAXPATH) != 0)
+    p->sandbox_path[0] = '\0';
+  else if (!p->sandboxed)
+    safestrcpy(p->sandbox_path, path, MAXPATH);
+
+  p->sandbox_mask |= (uint32)mask;
+  p->sandboxed = 1;
+  return 0;
+}
+
 // return how many clock tick interrupts have occurred
 // since start.
 uint64

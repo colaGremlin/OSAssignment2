@@ -57,9 +57,76 @@ main(int argc, char *argv[])
   exit(0);
 }
 
+static int
+fmtsize(char f)
+{
+  switch (f) {
+  case 'c':
+    return 1;
+  case 'h':
+    return 2;
+  case 'i':
+    return 4;
+  case 'p':
+  case 's':
+    return 8;
+  default:
+    return -1;
+  }
+}
+
 void
 memdump(char *fmt, char *data, int len)
 {
-  // Your code here.  `data` holds `len` valid bytes.
+  int off = 0;
+  int size;
+  short h;
+  int i;
+  uint64 p;
+  char *s;
 
+  if (fmt == 0 || (data == 0 && len > 0) || len < 0)
+    return;
+
+  // memcpy into locals since data may be unaligned.
+  for (; *fmt; fmt++) {
+    if (*fmt == 'S') {
+      for (; off < len && data[off] != '\0'; off++)
+        printf("%c", data[off]);
+      printf("\n");
+      return;
+    }
+
+    if ((size = fmtsize(*fmt)) < 0) {
+      printf("memdump: unknown format '%c'\n", *fmt);
+      return;
+    }
+    if (len - off < size) {
+      printf("memdump: not enough data for '%c'\n", *fmt);
+      return;
+    }
+
+    switch (*fmt) {
+    case 'c':
+      printf("%c\n", data[off]);
+      break;
+    case 'h':
+      memcpy(&h, data + off, sizeof(h));
+      printf("%d\n", h);
+      break;
+    case 'i':
+      memcpy(&i, data + off, sizeof(i));
+      printf("%d\n", i);
+      break;
+    case 'p':
+      memcpy(&p, data + off, sizeof(p));
+      printf("%lx\n", p);
+      break;
+    case 's':
+      memcpy(&s, data + off, sizeof(s));
+      printf("%s\n", s ? s : "(null)");
+      break;
+    }
+    off += size;
+  }
 }

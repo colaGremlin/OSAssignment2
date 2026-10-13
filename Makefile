@@ -90,7 +90,7 @@ OBJCOPY = $(TOOLPREFIX)objcopy
 OBJDUMP = $(TOOLPREFIX)objdump
 
 # Deterministic builds.
-DETFLAGS = -ffile-prefix-map=$(CURDIR)=.
+DETFLAGS = '-ffile-prefix-map=$(CURDIR)=.'
 
 CFLAGS = -Wall -Werror -Wno-unknown-attributes -O -fno-omit-frame-pointer -ggdb -gdwarf-2
 CFLAGS += $(DETFLAGS)
@@ -203,15 +203,14 @@ UPROGS=\
 	$U/_forphan\
 	$U/_dorphan\
 	$U/_sync\
-
-
-
-
-ifeq ($(LAB),syscall)
-UPROGS += \
+	$U/_sleep\
+	$U/_sixfive\
+	$U/_memdump\
+	$U/_find\
+	$U/_sandbox\
+	$U/_sbtest\
 	$U/_attack\
-	$U/_secret
-endif
+	$U/_secret\
 
 ifeq ($(LAB),traps)
 UPROGS += \
@@ -275,15 +274,7 @@ UPROGS += \
 	$U/_nettest
 endif
 
-UEXTRA=
-ifeq ($(LAB),util)
-	UEXTRA += user/findtest.sh
-	UEXTRA += user/sixfive.txt
-	UPROGS += $U/_memdump
-endif
-ifeq ($(LAB),syscall)
-	UEXTRA += user/exec.sh
-endif
+UEXTRA = user/findtest.sh user/sixfive.txt user/exec.sh
 
 fs.img: mkfs/mkfs README $(UEXTRA) $(UPROGS)
 	mkfs/mkfs fs.img README $(UEXTRA) $(UPROGS)
